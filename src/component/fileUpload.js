@@ -24,7 +24,7 @@ const DropFileInput = props => {
     const onFileDrop = (e) => {
         const newFile = e.target.files[0];
         if (newFile) {
-            const updatedList = [...fileList, newFile];
+            const updatedList = [ newFile];
             setFileList(updatedList);
             setConverted(false)
             props.onFileChange(updatedList);
@@ -49,7 +49,7 @@ const DropFileInput = props => {
 
             console.log(formData, "formdasta");
 
-                const response = await axios.post('http://localhost:5000/api/OCR', formData, {
+                const response = await axios.post('https://tesseract-js.onrender.com/api/OCR', formData, {
                     headers: {
                         'Content-Type': `multipart/form-data`,
                         // Add any additional headers if needed (e.g., authorization)
@@ -99,12 +99,12 @@ const DropFileInput = props => {
                                 </div>
                             ))
                         }
-                        <button onClick={uploadFile}>Start</button>
+                        <button type="button" onClick={uploadFile} className="btn btn-dark btn-xs">Extract</button>
                     </div>
-                ) : <div className="text">
+                ) : converted===true ?( <div className="text">
                 {/* <img src={uploadImg} alt="" /> */}
                 <p>{text}</p>
-            </div>
+            </div>):null
             }
         </>
     );
