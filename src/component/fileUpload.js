@@ -1,0 +1,117 @@
+import React, { useRef, useState } from 'react';
+import PropTypes from 'prop-types';
+import axios from 'axios';
+
+// import './drop-file-input.css';
+
+// import { ImageConfig } from '../../config/ImageConfig'; 
+// import uploadImg from '../../assets/cloud-upload-regular-240.png';
+
+const DropFileInput = props => {
+
+    const wrapperRef = useRef(null);
+
+    const [fileList, setFileList] = useState([]);
+    const [text, setText] = useState("");
+    const [converted, setConverted] = useState(false)
+
+    const onDragEnter = () => wrapperRef.current.classList.add('dragover');
+
+    const onDragLeave = () => wrapperRef.current.classList.remove('dragover');
+
+    const onDrop = () => wrapperRef.current.classList.remove('dragover');
+
+    const onFileDrop = (e) => {
+        const newFile = e.target.files[0];
+        if (newFile) {
+            const updatedList = [...fileList, newFile];
+            setFileList(updatedList);
+            setConverted(false)
+            props.onFileChange(updatedList);
+        }
+    }
+
+    const fileRemove = (file) => {
+        const updatedList = [...fileList];
+        updatedList.splice(fileList.indexOf(file), 1);
+        setFileList(updatedList);
+        props.onFileChange(updatedList);
+    }
+
+    const uploadFile = async(e) =>{
+        // const newFile = e.target?.files[0];
+        try {
+            // const formData = new FormData();
+            // formData.append('file', fileList[0]);
+            const formData = {
+                image : fileList[0]
+            }
+
+            console.log(formData, "formdasta");
+
+                const response = await axios.post('http://localhost:5000/api/OCR', formData, {
+                    headers: {
+                        'Content-Type': `multipart/form-data`,
+                        // Add any additional headers if needed (e.g., authorization)
+                    },
+                });
+                console.log(response.data.data, "response");
+                if(response){
+                    setConverted(true)
+                }
+                setText(response.data.data)
+        }
+        catch(error){
+            console.error('Error uploading file:', error.message);
+        }
+    }
+
+    return (
+        <>
+            <div
+                ref={wrapperRef}
+                className="drop-file-input"
+                onDragEnter={onDragEnter}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+            >
+                <div className="drop-file-input__label">
+                    {/* <img src={uploadImg} alt="" /> */}
+                    <p>Drag & Drop your files here</p>
+                </div>
+                <input type="file" value="" onChange={onFileDrop} />
+            </div>
+            {
+                fileList.length > 0 && converted===false ? (
+                    <div className="drop-file-preview">
+                        <p className="drop-file-preview__title">
+                            Ready to upload
+                        </p>
+                        {
+                            fileList.map((item, index) => (
+                                <div key={index} className="drop-file-preview__item">
+                                    {/* <img src={ImageConfig[item.type.split('/')[1]] || ImageConfig['default']} alt="" /> */}
+                                    <div className="drop-file-preview__item__info">
+                                        <p>{item.name}</p>
+                                        <p>{item.size} B</p>
+                                    </div>
+                                    <span className="drop-file-preview__item__del" onClick={() => fileRemove(item)}>x</span>
+                                </div>
+                            ))
+                        }
+                        <button onClick={uploadFile}>Start</button>
+                    </div>
+                ) : <div className="text">
+                {/* <img src={uploadImg} alt="" /> */}
+                <p>{text}</p>
+            </div>
+            }
+        </>
+    );
+}
+
+DropFileInput.propTypes = {
+    onFileChange: PropTypes.func
+}
+
+export default DropFileInput;
